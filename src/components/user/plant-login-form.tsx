@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PlantRegisterForm } from "@/components/user/plant-register-form";
 import type React from "react";
 import { cn } from "@/lib/utils";
@@ -33,7 +32,11 @@ export function PlantLoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [showRegister, setShowRegister] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const section = searchParams.get("section");
+  const isRegister = section === "register";
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,9 +44,8 @@ export function PlantLoginForm({
       password: "",
     },
   });
-  const router = useRouter();
 
-  if (showRegister) {
+  if (isRegister) {
     return <PlantRegisterForm />;
   }
 
@@ -56,6 +58,10 @@ export function PlantLoginForm({
       toast("" + error);
     }
   }
+
+  const navigateToRegister = () => {
+    router.push("/login?section=register");
+  };
 
   return (
     <div className={cn("w-full h-dvh", className)} {...props}>
@@ -145,7 +151,7 @@ export function PlantLoginForm({
                         {...field}
                       />
                     </FormControl>
-                    <div className=" flex">
+                    <div className="flex">
                       <Button
                         variant="link"
                         className="text-xs text-teal-600 h-10"
@@ -231,7 +237,7 @@ export function PlantLoginForm({
               ¿No tienes una cuenta?{" "}
               <button
                 type="button"
-                onClick={() => setShowRegister(true)}
+                onClick={navigateToRegister}
                 className="font-medium text-teal-600 hover:underline"
               >
                 Registrase
