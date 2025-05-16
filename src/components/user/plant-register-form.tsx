@@ -1,63 +1,109 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import type React from "react"
-import { useState } from "react"
-import { PlantLoginForm } from "@/components/user/plant-login-form"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Facebook, Mail, Lock, User, Phone } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
+import { PlantLoginForm } from "@/components/user/plant-login-form";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Facebook, Mail, Lock, User } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "sonner";
+import { registrarUsuario } from "@/services/api/user";
 
-const formSchema = z
-  .object({
-    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-    email: z.string().email({ message: "Please enter a valid email address" }),
-    phone: z.string().min(10, { message: "Please enter a valid phone number" }),
-    password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  })
+const formSchema = z.object({
+  nametag: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  lastname: z
+    .string()
+    .min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
+});
 
-export function PlantRegisterForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const [isLogin, setIsLogin] = useState(false)
+export function PlantRegisterForm({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<"div">) {
+  const [isLogin, setIsLogin] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      nametag: "",
       name: "",
+      lastname: "",
       email: "",
-      password: ""
+      password: "",
     },
-  })
-  const router = useRouter()
+  });
+  const router = useRouter();
   if (isLogin) {
-    return <PlantLoginForm/>
+    return <PlantLoginForm />;
   }
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    alert("Registration successful!")
-    router.push("/login") 
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const response = await registrarUsuario(
+        values.nametag,
+        values.name,
+        values.lastname,
+        values.email,
+        values.password
+      );
+      console.log(response);
+      toast("Registro exitoso");
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
+    } catch (error) {
+      toast("" + error);
+    }
   }
 
   return (
-    <div className={cn("w-full", className)} {...props}>
+    <div className={cn("w-full h-dvh", className)} {...props}>
       <div className="relative bg-teal-600 px-6 pt-10 pb-32 rounded-b-3xl">
         <div className="absolute right-0 top-0">
-          <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M60 0C80 20 100 30 120 40V0H60Z" fill="#4ade80" fillOpacity="0.3" />
+          <svg
+            width="120"
+            height="120"
+            viewBox="0 0 120 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M60 0C80 20 100 30 120 40V0H60Z"
+              fill="#4ade80"
+              fillOpacity="0.3"
+            />
           </svg>
         </div>
         <div className="absolute left-0 bottom-10">
-          <svg width="80" height="160" viewBox="0 0 80 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 80C20 60 40 40 40 0V160C40 120 20 100 0 80Z" fill="#4ade80" fillOpacity="0.3" />
+          <svg
+            width="80"
+            height="160"
+            viewBox="0 0 80 160"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M0 80C20 60 40 40 40 0V160C40 120 20 100 0 80Z"
+              fill="#4ade80"
+              fillOpacity="0.3"
+            />
           </svg>
         </div>
         <div className="relative z-10">
@@ -76,10 +122,31 @@ export function PlantRegisterForm({ className, ...props }: React.ComponentPropsW
           </div>
         </div>
 
-        <h2 className="text-xl font-bold text-teal-700 mb-6">Registrarse</h2>
+        <h2 className="text-xl font-bold text-teal-700 mb-6 mt-16">
+          Registrarse
+        </h2>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="nametag"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                    <FormControl>
+                      <Input
+                        placeholder="NameTag"
+                        className="pl-10 bg-white border-gray-200"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs mt-1" />
+                  </div>
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="name"
@@ -88,7 +155,30 @@ export function PlantRegisterForm({ className, ...props }: React.ComponentPropsW
                   <div className="relative">
                     <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     <FormControl>
-                      <Input placeholder="Nombre completo" className="pl-10 bg-white border-gray-200" {...field} />
+                      <Input
+                        placeholder="Nombres completo"
+                        className="pl-10 bg-white border-gray-200"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs mt-1" />
+                  </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastname"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                    <FormControl>
+                      <Input
+                        placeholder="Apellidos"
+                        className="pl-10 bg-white border-gray-200"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage className="text-xs mt-1" />
                   </div>
@@ -104,7 +194,11 @@ export function PlantRegisterForm({ className, ...props }: React.ComponentPropsW
                   <div className="relative">
                     <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     <FormControl>
-                      <Input placeholder="Email" className="pl-10 bg-white border-gray-200" {...field} />
+                      <Input
+                        placeholder="Email"
+                        className="pl-10 bg-white border-gray-200"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage className="text-xs mt-1" />
                   </div>
@@ -133,22 +227,37 @@ export function PlantRegisterForm({ className, ...props }: React.ComponentPropsW
               )}
             />
 
-            <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white">
+            <Button
+              type="submit"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+            >
               Registrarse
             </Button>
 
             <div className="relative flex justify-center items-center py-2 w-full">
               <Separator className="flex-grow shrink" />
-              <span className="mx-6 text-xs text-gray-400 whitespace-nowrap">O registrarse con</span>
+              <span className="mx-6 text-xs text-gray-400 whitespace-nowrap">
+                O registrarse con
+              </span>
               <Separator className="flex-grow shrink" />
             </div>
 
             <div className="flex justify-center space-x-4">
-              <Button variant="outline" size="icon" className="rounded-full bg-white w-10 h-10" type="button">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full bg-white w-10 h-10"
+                type="button"
+              >
                 <Facebook className="h-5 w-5 text-blue-600" />
                 <span className="sr-only">Facebook</span>
               </Button>
-              <Button variant="outline" size="icon" className="rounded-full bg-white w-10 h-10" type="button">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full bg-white w-10 h-10"
+                type="button"
+              >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path
                     fill="#EA4335"
@@ -169,7 +278,12 @@ export function PlantRegisterForm({ className, ...props }: React.ComponentPropsW
                 </svg>
                 <span className="sr-only">Google</span>
               </Button>
-              <Button variant="outline" size="icon" className="rounded-full bg-white w-10 h-10" type="button">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full bg-white w-10 h-10"
+                type="button"
+              >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
@@ -182,10 +296,11 @@ export function PlantRegisterForm({ className, ...props }: React.ComponentPropsW
 
             <div className="text-center text-sm text-gray-500">
               ¿Ya tienes una cuenta?{" "}
-              <button 
-              type="button"
-              onClick={() => setIsLogin(true)}
-              className="font-medium text-teal-600">
+              <button
+                type="button"
+                onClick={() => setIsLogin(true)}
+                className="font-medium text-teal-600"
+              >
                 Iniciar sesión
               </button>
             </div>
@@ -193,5 +308,5 @@ export function PlantRegisterForm({ className, ...props }: React.ComponentPropsW
         </Form>
       </div>
     </div>
-  )
+  );
 }

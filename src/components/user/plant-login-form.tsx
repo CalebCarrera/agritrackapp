@@ -1,4 +1,5 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PlantRegisterForm } from "@/components/user/plant-register-form";
@@ -18,6 +19,8 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { loginUsuario } from "@/services/api/user";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -38,23 +41,24 @@ export function PlantLoginForm({
       password: "",
     },
   });
+  const router = useRouter();
 
   if (showRegister) {
     return <PlantRegisterForm />;
   }
-  const router = useRouter();
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.email === "Caleb@gmail.com" && values.password === "123456") {
-      alert("Bienvenido, Admin!");
-      router.push("/dashboard"); // Redirige al
-    } else {
-      alert("Credenciales incorrectas");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const response = await loginUsuario(values.email, values.password);
+      router.push("/dashboard");
+      console.log(response);
+    } catch (error) {
+      toast("" + error);
     }
   }
 
   return (
-    <div className={cn("w-full", className)} {...props}>
+    <div className={cn("w-full h-dvh", className)} {...props}>
       <div className="relative bg-teal-600 px-6 pt-10 pb-32 rounded-b-3xl">
         <div className="absolute right-0 top-0">
           <svg
@@ -102,7 +106,7 @@ export function PlantLoginForm({
           </div>
         </div>
 
-        <h2 className="text-xl font-bold text-teal-700 mb-6">Login</h2>
+        <h2 className="text-xl font-bold text-teal-700 mb-6 mt-16">Login</h2>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -224,8 +228,8 @@ export function PlantLoginForm({
             </div>
 
             <div className="text-center text-sm text-gray-500 mt-4">
-            ¿No tienes una cuenta?{" "}
-            <button
+              ¿No tienes una cuenta?{" "}
+              <button
                 type="button"
                 onClick={() => setShowRegister(true)}
                 className="font-medium text-teal-600 hover:underline"
